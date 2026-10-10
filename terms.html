@@ -43,6 +43,7 @@
       <tr id="environment"><td><code>environment</code></td><td>The <code>Environment</code> in which the activity ran.</td></tr>
       <tr id="limits"><td><code>limits</code></td><td>Reasons why the activity cannot be replayed, e.g. <code>parameters_not_encoded</code>.</td></tr>
       <tr id="commandId"><td><code>commandId</code></td><td>Identifier shared by the activities of one user command.</td></tr>
+      <tr id="xAlignment"><td><code>xAlignment</code></td><td>X-alignment rule applied to the inputs before the call, as RFC 8785 canonical JSON text: <code>rule</code> identifier, <code>version</code>, and <code>interpolated</code> (<code>true</code> when the operand was resampled on the source grid). Absent when no alignment applies. A replay refuses an unknown rule or version.</td></tr>
     </table>
 
     <h2>Properties of role bindings and parameters</h2>
