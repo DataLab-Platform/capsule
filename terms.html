@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>DataLab workspace capsule terms</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      td, th { vertical-align: top; padding: 0.3em 0.6em; text-align: left; }
+      tr:target { background: #fff3c4; }
+    </style>
+  </head>
+  <body>
+    <h1>DataLab workspace capsule terms</h1>
+    <p>
+      Namespace: <code>https://datalab-platform.com/capsule/terms#</code>
+      (JSON-LD prefix <code>dlc</code>), used by the
+      <a href="0.1/">DataLab workspace capsule profile</a>. Status:
+      experimental. Terms are only added; a published term keeps its meaning.
+    </p>
+
+    <h2>Classes</h2>
+    <table>
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr id="Environment"><td><code>Environment</code></td><td>Execution environment of activities: DataLab edition and version, Python implementation and version, platform, Pyodide version; package versions are listed as <code>softwareRequirements</code>.</td></tr>
+      <tr id="RoleBinding"><td><code>RoleBinding</code></td><td>One input or output of an action: its role (<code>name</code>), its <code>position</code> among the action's inputs or outputs (0-based) and the bound state or artifact.</td></tr>
+    </table>
+
+    <h2>Properties of the root dataset</h2>
+    <table>
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr id="manifestFingerprint"><td><code>manifestFingerprint</code></td><td><code>sha256:</code> digest of the RFC 8785 canonical JSON of the manifest, computed without this property.</td></tr>
+      <tr id="workspaceId"><td><code>workspaceId</code></td><td>Identifier of the workspace ledger.</td></tr>
+    </table>
+
+    <h2>Properties of actions</h2>
+    <table>
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr id="inputs"><td><code>inputs</code></td><td>Ordered inputs of the action, as <code>RoleBinding</code> entities.</td></tr>
+      <tr id="outputs"><td><code>outputs</code></td><td>Ordered outputs of the action, as <code>RoleBinding</code> entities.</td></tr>
+      <tr id="parameters"><td><code>parameters</code></td><td>Parameters of the operation call, as <code>PropertyValue</code> entities.</td></tr>
+      <tr id="replayable"><td><code>replayable</code></td><td><code>true</code> when the call names a qualified operation contract and may be prepared for replay; <code>false</code> for an opaque call.</td></tr>
+      <tr id="origin"><td><code>origin</code></td><td>How the activity was started: <code>ordinary</code>, <code>recompute_in_place</code> or <code>history_replay</code>.</td></tr>
+      <tr id="environment"><td><code>environment</code></td><td>The <code>Environment</code> in which the activity ran.</td></tr>
+      <tr id="limits"><td><code>limits</code></td><td>Reasons why the activity cannot be replayed, e.g. <code>parameters_not_encoded</code>.</td></tr>
+      <tr id="commandId"><td><code>commandId</code></td><td>Identifier shared by the activities of one user command.</td></tr>
+    </table>
+
+    <h2>Properties of role bindings and parameters</h2>
+    <table>
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr id="state"><td><code>state</code></td><td>The state bound to the role.</td></tr>
+      <tr id="artifact"><td><code>artifact</code></td><td>The non-state result (e.g. an analysis table) bound to the role.</td></tr>
+      <tr id="jsonValue"><td><code>jsonValue</code></td><td>Parameter value as RFC 8785 canonical JSON text (lossless, including <code>null</code> and encoded non-finite numbers).</td></tr>
+    </table>
+
+    <h2>Properties of states and artifacts</h2>
+    <table>
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr id="kind"><td><code>kind</code></td><td>Kind of the object, e.g. <code>signal</code>.</td></tr>
+      <tr id="objectUuid"><td><code>objectUuid</code></td><td>Persistent identifier of the DataLab object.</td></tr>
+      <tr id="sequence"><td><code>sequence</code></td><td>Observation order of the state in the ledger.</td></tr>
+      <tr id="fingerprint"><td><code>fingerprint</code></td><td>Content fingerprint of the state (e.g. <code>sha256:</code> digest).</td></tr>
+      <tr id="fingerprintScheme"><td><code>fingerprintScheme</code></td><td>Scheme of the fingerprint, e.g. <code>datalab-signal-v1</code> (defined in the <a href="0.1/">profile</a>).</td></tr>
+      <tr id="locator"><td><code>locator</code></td><td>HDF5 path of the object holding the state in <code>workspace.h5</code>; absent when the state is not stored.</td></tr>
+      <tr id="producedBy"><td><code>producedBy</code></td><td>The action that produced the state.</td></tr>
+      <tr id="artifactKind"><td><code>artifactKind</code></td><td>Kind of an artifact, e.g. <code>table</code>.</td></tr>
+      <tr id="key"><td><code>key</code></td><td>Key of an artifact within its object.</td></tr>
+    </table>
+
+    <h2>Properties of software and environments</h2>
+    <table>
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr id="operationId"><td><code>operationId</code></td><td>Stable identifier of an operation contract, e.g. <code>sigima.signal.normalize</code>.</td></tr>
+      <tr id="contractVersion"><td><code>contractVersion</code></td><td>Integer version of the operation contract.</td></tr>
+      <tr id="package"><td><code>package</code></td><td>Python distribution providing an implementation.</td></tr>
+      <tr id="edition"><td><code>edition</code></td><td>DataLab edition: <code>desktop</code> or <code>web</code>.</td></tr>
+      <tr id="editionVersion"><td><code>editionVersion</code></td><td>Version of the DataLab edition.</td></tr>
+      <tr id="python"><td><code>python</code></td><td>Python implementation and version.</td></tr>
+      <tr id="platform"><td><code>platform</code></td><td>Platform identifier (e.g. <code>win32</code>, <code>emscripten</code>).</td></tr>
+      <tr id="pyodide"><td><code>pyodide</code></td><td>Pyodide version, or null outside Pyodide.</td></tr>
+    </table>
+  </body>
+</html>

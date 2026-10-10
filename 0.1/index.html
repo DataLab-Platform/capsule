@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>DataLab workspace capsule profile 0.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <h1>DataLab workspace capsule profile 0.1</h1>
+    <ul>
+      <li>Identifier: <code>https://datalab-platform.com/capsule/0.1</code></li>
+      <li>Version: 0.1</li>
+      <li>Status: experimental; may change before version 1.0</li>
+      <li>
+        Terms: <a href="../terms"><code>https://datalab-platform.com/capsule/terms#</code></a>
+        (JSON-LD prefix <code>dlc</code>)
+      </li>
+      <li>
+        Extends:
+        <a href="https://w3id.org/ro/crate/1.3">RO-Crate 1.3</a> and
+        <a href="https://w3id.org/ro/wfrun/process/0.6">Process Run Crate 0.6</a>
+      </li>
+      <li>
+        Reference implementation:
+        <a href="https://github.com/DataLab-Platform/DataLab-Capsule">DataLab-Capsule</a>
+      </li>
+    </ul>
+
+    <h2>Archive</h2>
+    <p>
+      A capsule is a ZIP archive with exactly two entries, stored without
+      compression: <code>ro-crate-metadata.json</code> (the manifest) and
+      <code>workspace.h5</code> (a DataLab HDF5 workspace, provenance block
+      <code>/DataLab_Provenance</code> included). Readers must refuse absolute
+      paths, <code>..</code>, drive letters, backslashes, duplicate or
+      unexpected entries, links and encrypted entries, and must check the
+      SHA-256 and size of <code>workspace.h5</code> against the manifest.
+    </p>
+
+    <h2>Manifest</h2>
+    <p>
+      The manifest is an RO-Crate 1.3 metadata document whose
+      <code>@context</code> is
+      <code>["https://w3id.org/ro/crate/1.3/context", {"dlc": "https://datalab-platform.com/capsule/terms#"}]</code>.
+    </p>
+    <ul>
+      <li>
+        The root <code>Dataset</code> (<code>./</code>) has a name, a
+        description, <code>datePublished</code> and a licence (an entity or a
+        text). Its <code>conformsTo</code> lists Process Run Crate 0.6 and this
+        profile. It contains <code>workspace.h5</code> (<code>hasPart</code>),
+        mentions every action and carries
+        <a href="../terms#manifestFingerprint"><code>dlc:manifestFingerprint</code></a>
+        and <a href="../terms#workspaceId"><code>dlc:workspaceId</code></a>.
+      </li>
+      <li>
+        <code>workspace.h5</code> is a <code>File</code> with
+        <code>encodingFormat</code> <code>application/x-hdf5</code>,
+        <code>contentSize</code> and <code>sha256</code>.
+      </li>
+      <li>
+        Each activity of the workspace ledger is a <code>CreateAction</code>,
+        or an <code>UpdateAction</code> for an in-place recomputation. Its
+        <code>instrument</code> lists a <code>SoftwareApplication</code> for the
+        operation contract (<code>dlc:operationId</code>,
+        <code>dlc:contractVersion</code>) when the activity is replayable, or
+        for the informative implementation (no operation identifier) when it
+        is opaque, plus one for the DataLab edition that ran it.
+        <code>object</code> and <code>result</code> list its input and output
+        states; because JSON-LD arrays are unordered, the roles are also given
+        as <a href="../terms#RoleBinding"><code>dlc:RoleBinding</code></a>
+        entities with an explicit <code>position</code>
+        (<code>dlc:inputs</code>, <code>dlc:outputs</code>). Parameters are
+        <code>PropertyValue</code> entities (<code>dlc:parameters</code>) with a
+        lossless <code>dlc:jsonValue</code>.
+      </li>
+      <li>
+        Each state is a <code>CreativeWork</code> with its object identifier,
+        its fingerprint and, when present in <code>workspace.h5</code>, its
+        HDF5 path (<code>dlc:locator</code>).
+      </li>
+      <li>
+        Each execution environment is a
+        <a href="../terms#Environment"><code>dlc:Environment</code></a> whose
+        <code>softwareRequirements</code> list the package versions.
+      </li>
+    </ul>
+
+    <h2>Manifest fingerprint</h2>
+    <p>
+      <code>dlc:manifestFingerprint</code> is <code>sha256:</code> followed by
+      the lowercase hexadecimal SHA-256 of the RFC 8785 (JCS) canonical JSON of
+      the manifest, computed without the <code>dlc:manifestFingerprint</code>
+      property itself.
+    </p>
+
+    <h2>State fingerprint <code>datalab-signal-v1</code></h2>
+    <p>
+      The payload is the UTF-8 JCS form of
+      <code>{"scheme": "datalab-signal-v1", "dtype": "&lt;f8", "length": N, "rows": ["x", "y"], "units": {"x": "s", "y": ""}}</code>
+      (little-endian NumPy dtype string, missing units as <code>""</code>),
+      one <code>0x00</code> byte, then each row (<code>x</code>,
+      <code>y</code>, then <code>dx</code> and <code>dy</code> when present and
+      not all NaN) as contiguous little-endian bytes. The value is
+      <code>sha256:</code> followed by the lowercase hexadecimal digest of the
+      payload.
+    </p>
+  </body>
+</html>
