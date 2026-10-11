@@ -180,10 +180,15 @@
       parents; a capsule never changes once published, a new revision is a new
       capsule. Comparing two revisions sorts the differences into scientific
       changes (activities, parameters, states, fingerprints, regions of
-      interest, workspace content), presentation changes (name, description,
-      licence, date, where states are stored, whether the workspace is
-      included), environment changes (environments, package versions) and
-      attachment changes (see below).
+      interest), presentation changes (name, description, licence, date),
+      storage changes (SHA-256 and size of the workspace file, whether it is
+      included or referenced, where states are stored), environment changes
+      (environments, package versions) and attachment changes (see below).
+      Different workspace bytes do not show a scientific change: saving the
+      same content again gives another file. When nothing differs in the
+      recorded activities and states but the files differ, scientific
+      equality is not concluded, since content outside the recorded
+      provenance is not compared.
     </p>
 
     <h2>Referenced workspaces</h2>
@@ -283,7 +288,7 @@
     </ul>
     <p>
       The full rules are in
-      <a href="https://github.com/DataLab-Platform/DataLab-Capsule/blob/c74be0011de15c10a674de65a56c598a960b3688/doc/rules.md">doc/rules.md</a>
+      <a href="https://github.com/DataLab-Platform/DataLab-Capsule/blob/d910e3548367901d9918be6a282386ee648bf3ae/doc/rules.md">doc/rules.md</a>
       of the reference implementation.
     </p>
 
@@ -300,7 +305,7 @@
       <tr><td><a href="contexts/ro-crate-1.3.jsonld"><code>contexts/ro-crate-1.3.jsonld</code></a></td><td>Pinned copy of <code>https://w3id.org/ro/crate/1.3/context</code> (CC0 1.0, by the RO-Crate authors), used for offline validation</td><td><code>5a3df1a43185501db4d45cdde5a478c57eeb1d673eedfe400488fc4c4b21dd91</code></td></tr>
     </table>
     <p>
-      A <a href="https://github.com/DataLab-Platform/DataLab-Capsule/tree/c74be0011de15c10a674de65a56c598a960b3688/tests/fixtures/corpus">fixture corpus</a>
+      A <a href="https://github.com/DataLab-Platform/DataLab-Capsule/tree/d910e3548367901d9918be6a282386ee648bf3ae/tests/fixtures/corpus">fixture corpus</a>
       of valid and invalid capsules, with the expected results of the
       reference command line, accompanies the reference implementation.
     </p>
