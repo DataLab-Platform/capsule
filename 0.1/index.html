@@ -141,5 +141,23 @@
       different value under the same key, the earlier artifact is reported as
       replaced, never as the later value.
     </p>
+
+    <h2>Legacy activities</h2>
+    <p>
+      A workspace saved without provenance may hold, in each processed object's
+      metadata, a record of the processing that produced it. Such a record
+      becomes an action with <code>dlc:origin</code>
+      <code>legacy_metadata</code>, and nothing missing is invented: its
+      inputs bind objects (<code>dlc:objectUuid</code>) whose state at execution
+      time is unknown, it has no parameters, no environment and no edition, it
+      is never replayable, and <code>dlc:legacy</code> keeps the record as
+      stored with the issues found at import (missing ancestry, unavailable
+      inputs, unsupported operations, version warnings, unreadable parameters,
+      unidentified analysis results). It claims no result (<code>result</code>
+      and <code>dlc:outputs</code> are empty): the state of the holding object
+      observed when the workspace was opened is named by
+      <code>dlc:observedState</code>, a state that no action produced, since the
+      data may have changed after the processing without the record changing.
+    </p>
   </body>
 </html>

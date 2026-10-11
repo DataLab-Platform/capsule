@@ -22,7 +22,7 @@
     <table>
       <tr><th>Term</th><th>Definition</th></tr>
       <tr id="Environment"><td><code>Environment</code></td><td>Execution environment of activities: DataLab edition and version, Python implementation and version, platform, Pyodide version; package versions are listed as <code>softwareRequirements</code>.</td></tr>
-      <tr id="RoleBinding"><td><code>RoleBinding</code></td><td>One input or output of an action: its role (<code>name</code>), its <code>position</code> among the action's inputs or outputs (0-based) and the bound state or artifact.</td></tr>
+      <tr id="RoleBinding"><td><code>RoleBinding</code></td><td>One input or output of an action: its role (<code>name</code>), its <code>position</code> among the action's inputs or outputs (0-based) and the bound state or artifact, or, for a legacy activity, the bound object (<code>objectUuid</code>) whose state at execution time is unknown.</td></tr>
     </table>
 
     <h2>Properties of the root dataset</h2>
@@ -39,9 +39,11 @@
       <tr id="outputs"><td><code>outputs</code></td><td>Ordered outputs of the action, as <code>RoleBinding</code> entities.</td></tr>
       <tr id="parameters"><td><code>parameters</code></td><td>Parameters of the operation call, as <code>PropertyValue</code> entities.</td></tr>
       <tr id="replayable"><td><code>replayable</code></td><td><code>true</code> when the call names a qualified operation contract and may be prepared for replay; <code>false</code> for an opaque call.</td></tr>
-      <tr id="origin"><td><code>origin</code></td><td>How the activity was started: <code>ordinary</code>, <code>recompute_in_place</code> or <code>history_replay</code>.</td></tr>
+      <tr id="origin"><td><code>origin</code></td><td>How the activity was started: <code>ordinary</code>, <code>recompute_in_place</code> or <code>history_replay</code>; <code>legacy_metadata</code> for an activity rebuilt from processing metadata of a workspace saved without provenance (defined in the <a href="0.1/">profile</a>).</td></tr>
       <tr id="environment"><td><code>environment</code></td><td>The <code>Environment</code> in which the activity ran.</td></tr>
       <tr id="limits"><td><code>limits</code></td><td>Reasons why the activity cannot be replayed, e.g. <code>parameters_not_encoded</code>.</td></tr>
+      <tr id="legacy"><td><code>legacy</code></td><td>For a <code>legacy_metadata</code> activity, RFC 8785 canonical JSON text of the processing record as stored, the object holding it, the version that saved the file and the issues found at import (defined in the <a href="0.1/">profile</a>).</td></tr>
+      <tr id="observedState"><td><code>observedState</code></td><td>For a <code>legacy_metadata</code> activity, the state of the object holding the record, observed when the workspace was opened; not attested as the historical result and not produced by the activity.</td></tr>
       <tr id="commandId"><td><code>commandId</code></td><td>Identifier shared by the activities of one user command.</td></tr>
       <tr id="xAlignment"><td><code>xAlignment</code></td><td>X-alignment rule applied to the inputs before the call, as RFC 8785 canonical JSON text: <code>rule</code> identifier, <code>version</code>, and <code>interpolated</code> (<code>true</code> when the operand was resampled on the source grid). Absent when no alignment applies. A replay refuses an unknown rule or version.</td></tr>
     </table>
