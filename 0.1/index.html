@@ -28,13 +28,16 @@
 
     <h2>Archive</h2>
     <p>
-      A capsule is a ZIP archive with exactly two entries, stored without
-      compression: <code>ro-crate-metadata.json</code> (the manifest) and
-      <code>workspace.h5</code> (a DataLab HDF5 workspace, provenance block
-      <code>/DataLab_Provenance</code> included). Readers must refuse absolute
-      paths, <code>..</code>, drive letters, backslashes, duplicate or
-      unexpected entries, links and encrypted entries, and must check the
-      SHA-256 and size of <code>workspace.h5</code> against the manifest.
+      A capsule is a ZIP archive whose entries are stored without compression:
+      <code>ro-crate-metadata.json</code> (the manifest) and, unless the
+      workspace is referenced (see below), <code>workspace.h5</code> (a DataLab
+      HDF5 workspace, provenance block <code>/DataLab_Provenance</code>
+      included). Readers must refuse absolute paths, <code>..</code>, drive
+      letters, backslashes, duplicate or unexpected entries, links, encrypted
+      or compressed entries, and must check the SHA-256 and size of the
+      workspace against the manifest. As in RO-Crate, <code>sha256</code> holds
+      the lowercase hexadecimal digest without prefix and
+      <code>contentSize</code> the size in bytes as a string.
     </p>
 
     <h2>Manifest</h2>
@@ -48,13 +51,14 @@
         The root <code>Dataset</code> (<code>./</code>) has a name, a
         description, <code>datePublished</code> and a licence (an entity or a
         text). Its <code>conformsTo</code> lists Process Run Crate 0.6 and this
-        profile. It contains <code>workspace.h5</code> (<code>hasPart</code>),
+        profile. It contains the workspace file (<code>hasPart</code>),
         mentions every action and carries
         <a href="../terms#manifestFingerprint"><code>dlc:manifestFingerprint</code></a>
         and <a href="../terms#workspaceId"><code>dlc:workspaceId</code></a>.
       </li>
       <li>
-        <code>workspace.h5</code> is a <code>File</code> with
+        The workspace file (<code>workspace.h5</code>, or an absolute IRI
+        when referenced) is a <code>File</code> with
         <code>encodingFormat</code> <code>application/x-hdf5</code>,
         <code>contentSize</code> and <code>sha256</code>.
       </li>
@@ -158,6 +162,116 @@
       observed when the workspace was opened is named by
       <code>dlc:observedState</code>, a state that no action produced, since the
       data may have changed after the processing without the record changing.
+    </p>
+
+    <h2>Revisions</h2>
+    <p>
+      A capsule may name one parent revision with
+      <a href="../terms#revisionOf"><code>dlc:revisionOf</code></a>, the
+      manifest fingerprint of the parent. The property is part of the child's
+      own fingerprint and must differ from it. Revisions form a chain of
+      parents; a capsule never changes once published, a new revision is a new
+      capsule. Comparing two revisions sorts the differences into scientific
+      changes (activities, parameters, states, fingerprints, regions of
+      interest, workspace content), presentation changes (name, description,
+      licence, date, where states are stored, whether the workspace is
+      included) and environment changes (environments, package versions).
+    </p>
+
+    <h2>Referenced workspaces</h2>
+    <p>
+      Instead of including <code>workspace.h5</code>, a capsule may reference
+      its workspace: the root's <code>hasPart</code> then names a
+      <code>File</code> whose <code>@id</code> is an absolute IRI, with
+      <a href="../terms#referenced"><code>dlc:referenced</code></a>
+      <code>true</code>, <code>sha256</code> and <code>contentSize</code>, and
+      the archive holds the manifest only. Readers must not fetch the IRI on
+      their own: the workspace is obtained by an explicit choice of the user
+      or the application, and its bytes must match the SHA-256 and size of the
+      manifest before use. An archive holding <code>workspace.h5</code> for a
+      referenced workspace is invalid.
+    </p>
+
+    <h2>Reviews</h2>
+    <p>
+      A review is a separate JSON document
+      (<a href="schemas/review-1.schema.json">review schema</a>) about one
+      revision: its <code>target</code> is the reviewed manifest fingerprint;
+      it names the reviewer (and optionally a persistent identifier), a date,
+      a statement, an optional verdict (<code>endorsed</code>,
+      <code>disputed</code> or <code>comment</code>) and the verification
+      reports it relies on (activity and verdict). Its
+      <code>review_fingerprint</code> is the <code>sha256:</code> digest of its
+      RFC 8785 canonical JSON without that property. A review never modifies
+      the capsule; it does not authenticate the reviewer. Verification reports
+      follow the <a href="schemas/report-1.schema.json">report schema</a>.
+    </p>
+
+    <h2>Mapping to W3C PROV</h2>
+    <p>
+      The manifest maps to <a href="https://www.w3.org/TR/prov-o/">PROV-O</a>
+      as follows; the mapping is informative.
+    </p>
+    <table>
+      <tr><th>Capsule</th><th>PROV</th></tr>
+      <tr><td><code>CreateAction</code>, <code>UpdateAction</code> (activity)</td><td><code>prov:Activity</code>; <code>startTime</code>, <code>endTime</code> are <code>prov:startedAtTime</code>, <code>prov:endedAtTime</code></td></tr>
+      <tr><td>State (<code>CreativeWork</code> with <code>dlc:fingerprint</code>)</td><td><code>prov:Entity</code>; states sharing a <code>dlc:objectUuid</code> are <code>prov:specializationOf</code> the same object</td></tr>
+      <tr><td>Input <code>dlc:RoleBinding</code> (<code>dlc:inputs</code>, <code>object</code>)</td><td><code>prov:used</code>, qualified by a <code>prov:Usage</code> whose <code>prov:hadRole</code> is the role name</td></tr>
+      <tr><td>Output <code>dlc:RoleBinding</code> (<code>dlc:outputs</code>, <code>result</code>), <code>dlc:producedBy</code></td><td><code>prov:wasGeneratedBy</code>, qualified by a <code>prov:Generation</code> with <code>prov:hadRole</code></td></tr>
+      <tr><td>Analysis result (artifact)</td><td><code>prov:Entity</code> generated by the activity; <code>dlc:resultDigest</code> describes its value</td></tr>
+      <tr><td>Operation contract in <code>instrument</code> (<code>dlc:operationId</code>, <code>dlc:contractVersion</code>)</td><td><code>prov:Plan</code> of a <code>prov:Association</code> (<code>prov:hadPlan</code>)</td></tr>
+      <tr><td>DataLab edition in <code>instrument</code>, <code>dlc:environment</code></td><td><code>prov:SoftwareAgent</code> the activity <code>prov:wasAssociatedWith</code>; the environment describes that agent</td></tr>
+      <tr><td>Parameters (<code>dlc:parameters</code>)</td><td>Attributes of the activity, or entities <code>prov:used</code> with the parameter name as role</td></tr>
+      <tr><td>Legacy activity: input bound to <code>dlc:objectUuid</code>, <code>dlc:observedState</code></td><td><code>prov:used</code> of the object (general entity), state unknown; the observed state is not <code>prov:wasGeneratedBy</code> the activity</td></tr>
+      <tr><td>Root <code>Dataset</code>, <code>dlc:revisionOf</code></td><td><code>prov:Entity</code> (collection); <code>prov:wasRevisionOf</code> the parent revision</td></tr>
+      <tr><td>Review</td><td><code>prov:Entity</code> <code>prov:wasAttributedTo</code> the reviewer, <code>prov:wasInfluencedBy</code> the reviewed revision</td></tr>
+      <tr><td><code>dlc:commandId</code>, <code>dlc:locator</code>, fingerprints</td><td>No PROV equivalent</td></tr>
+    </table>
+
+    <h2>Identity, compatibility and restoration</h2>
+    <ul>
+      <li>
+        A state is the same content as another when their fingerprints and
+        regions of interest match; it is stored in the workspace when it has a
+        <code>dlc:locator</code> and the object found there still matches.
+        A capsule revision is identified by its manifest fingerprint, a
+        review by its review fingerprint, an environment by the digest of its
+        record.
+      </li>
+      <li>
+        Readers refuse versions they do not know (profile, ledger, report,
+        review, fingerprint scheme). A fingerprint scheme name is never reused
+        for another payload.
+      </li>
+      <li>
+        Only replayable activities (qualified operation contract) may be
+        recomputed, as a separate candidate compared with the stored result;
+        opaque and legacy activities never are. Verifying a capsule checks its
+        integrity and computes nothing.
+      </li>
+    </ul>
+    <p>
+      The full rules are in
+      <a href="https://github.com/DataLab-Platform/DataLab-Capsule/blob/cc8d57645ee1fc2cf713de5e37d6e9193030184e/doc/rules.md">doc/rules.md</a>
+      of the reference implementation.
+    </p>
+
+    <h2>Schemas and contexts</h2>
+    <p>
+      Published with this version of the profile (SHA-256 of the files as
+      published):
+    </p>
+    <table>
+      <tr><th>File</th><th>Document</th><th>SHA-256</th></tr>
+      <tr><td><a href="schemas/ledger-1.schema.json"><code>schemas/ledger-1.schema.json</code></a></td><td>Workspace ledger (<code>urn:datalab:schema:provenance-ledger:1</code>)</td><td><code>c7b8dd125f83ba31f2f59defc479bf01c7f97a84eb8e914b5c97594229badcfb</code></td></tr>
+      <tr><td><a href="schemas/report-1.schema.json"><code>schemas/report-1.schema.json</code></a></td><td>Verification report (<code>urn:datalab:schema:verification-report:1</code>)</td><td><code>cc3dd342a632d907176893c5b63956c754fa45c782e4980e3c0828b31aff801f</code></td></tr>
+      <tr><td><a href="schemas/review-1.schema.json"><code>schemas/review-1.schema.json</code></a></td><td>Review (<code>urn:datalab:schema:capsule-review:1</code>)</td><td><code>5d75d6f736cb89f974477b774b8fd841911cec63e20b2dc22e52066447a9f163</code></td></tr>
+      <tr><td><a href="contexts/ro-crate-1.3.jsonld"><code>contexts/ro-crate-1.3.jsonld</code></a></td><td>Pinned copy of <code>https://w3id.org/ro/crate/1.3/context</code> (CC0 1.0, by the RO-Crate authors), used for offline validation</td><td><code>5a3df1a43185501db4d45cdde5a478c57eeb1d673eedfe400488fc4c4b21dd91</code></td></tr>
+    </table>
+    <p>
+      A <a href="https://github.com/DataLab-Platform/DataLab-Capsule/tree/cc8d57645ee1fc2cf713de5e37d6e9193030184e/tests/fixtures/corpus">fixture corpus</a>
+      of valid and invalid capsules, with the expected results of the
+      reference command line, accompanies the reference implementation.
     </p>
   </body>
 </html>

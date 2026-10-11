@@ -30,6 +30,13 @@
       <tr><th>Term</th><th>Definition</th></tr>
       <tr id="manifestFingerprint"><td><code>manifestFingerprint</code></td><td><code>sha256:</code> digest of the RFC 8785 canonical JSON of the manifest, computed without this property.</td></tr>
       <tr id="workspaceId"><td><code>workspaceId</code></td><td>Identifier of the workspace ledger.</td></tr>
+      <tr id="revisionOf"><td><code>revisionOf</code></td><td>Manifest fingerprint (<code>sha256:</code> digest) of the parent revision of this capsule; at most one. Part of the manifest fingerprint of the child.</td></tr>
+    </table>
+
+    <h2>Properties of the workspace file</h2>
+    <table>
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr id="referenced"><td><code>referenced</code></td><td><code>true</code> when the workspace is not included in the archive but referenced by the absolute IRI of its <code>File</code> entity; its <code>sha256</code> and <code>contentSize</code> must match the bytes obtained (defined in the <a href="0.1/">profile</a>).</td></tr>
     </table>
 
     <h2>Properties of actions</h2>
