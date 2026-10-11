@@ -105,5 +105,41 @@
       <code>sha256:</code> followed by the lowercase hexadecimal digest of the
       payload.
     </p>
+
+    <h2>State fingerprint <code>datalab-image-v1</code></h2>
+    <p>
+      The payload is the UTF-8 JCS form of
+      <code>{"scheme": "datalab-image-v1", "dtype": "&lt;u2", "shape": [ny, nx], "coords": {...}, "units": {"x": "mm", "y": "mm", "z": ""}}</code>,
+      where <code>coords</code> is
+      <code>{"uniform": {"x0": ..., "y0": ..., "dx": ..., "dy": ...}}</code>
+      or <code>{"nonuniform": {"x": nx, "y": ny}}</code>, one
+      <code>0x00</code> byte, the data in C order as little-endian bytes, then,
+      for non-uniform coordinates, the X and Y coordinates as little-endian
+      float64. The value is <code>sha256:</code> followed by the lowercase
+      hexadecimal digest of the payload.
+    </p>
+
+    <h2>Regions of interest</h2>
+    <p>
+      A state whose object has a region of interest records its definition
+      (masks derive from it) and the <code>sha256:</code> digest of its RFC 8785
+      canonical JSON next to the fingerprint, which covers the data,
+      coordinates and units only; the manifest shows the definition as
+      <code>dlc:roi</code>. A state is the same only when both its fingerprint
+      and its region of interest (or the absence of one) match: a saved object
+      whose data are unchanged but whose region of interest differs is
+      reported as altered.
+    </p>
+
+    <h2>Analysis results</h2>
+    <p>
+      An analysis result is an artifact stored under a key of its object. The
+      artifact records the <code>sha256:</code> digest of the RFC 8785
+      canonical JSON of the stored value (arrays as nested lists, non-finite
+      numbers as <code>{"$float": "NaN" | "Infinity" | "-Infinity"}</code>),
+      shown as <code>dlc:resultDigest</code>. When a later analysis stores a
+      different value under the same key, the earlier artifact is reported as
+      replaced, never as the later value.
+    </p>
   </body>
 </html>

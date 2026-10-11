@@ -57,15 +57,17 @@
     <h2>Properties of states and artifacts</h2>
     <table>
       <tr><th>Term</th><th>Definition</th></tr>
-      <tr id="kind"><td><code>kind</code></td><td>Kind of the object, e.g. <code>signal</code>.</td></tr>
+      <tr id="kind"><td><code>kind</code></td><td>Kind of the object: <code>signal</code> or <code>image</code>.</td></tr>
       <tr id="objectUuid"><td><code>objectUuid</code></td><td>Persistent identifier of the DataLab object.</td></tr>
       <tr id="sequence"><td><code>sequence</code></td><td>Observation order of the state in the ledger.</td></tr>
       <tr id="fingerprint"><td><code>fingerprint</code></td><td>Content fingerprint of the state (e.g. <code>sha256:</code> digest).</td></tr>
-      <tr id="fingerprintScheme"><td><code>fingerprintScheme</code></td><td>Scheme of the fingerprint, e.g. <code>datalab-signal-v1</code> (defined in the <a href="0.1/">profile</a>).</td></tr>
+      <tr id="fingerprintScheme"><td><code>fingerprintScheme</code></td><td>Scheme of the fingerprint: <code>datalab-signal-v1</code> or <code>datalab-image-v1</code> (defined in the <a href="0.1/">profile</a>).</td></tr>
       <tr id="locator"><td><code>locator</code></td><td>HDF5 path of the object holding the state in <code>workspace.h5</code>; absent when the state is not stored.</td></tr>
+      <tr id="roi"><td><code>roi</code></td><td>Region of interest of the object, as RFC 8785 canonical JSON text of its definition; masks derive from it. Absent when the object has none.</td></tr>
       <tr id="producedBy"><td><code>producedBy</code></td><td>The action that produced the state.</td></tr>
       <tr id="artifactKind"><td><code>artifactKind</code></td><td>Kind of an artifact, e.g. <code>table</code>.</td></tr>
       <tr id="key"><td><code>key</code></td><td>Key of an artifact within its object.</td></tr>
+      <tr id="resultDigest"><td><code>resultDigest</code></td><td><code>sha256:</code> digest of the value an artifact held when it was recorded (defined in the <a href="0.1/">profile</a>); a different current value means the result was replaced.</td></tr>
     </table>
 
     <h2>Properties of software and environments</h2>
