@@ -74,16 +74,20 @@
         or an <code>UpdateAction</code> for an in-place recomputation. Its
         <code>instrument</code> lists a <code>SoftwareApplication</code> for the
         operation contract (<code>dlc:operationId</code>,
-        <code>dlc:contractVersion</code>) when the activity is replayable, or
-        for the informative implementation (no operation identifier) when it
-        is opaque, plus one for the DataLab edition that ran it.
+        <code>dlc:contractVersion</code>) when the call names an operation
+        (a replayable activity, whether or not the reader's computation library
+        qualifies that contract version for replay), or for the informative
+        implementation (no operation identifier) when it is opaque, plus one
+        for the DataLab edition that ran it.
         <code>object</code> and <code>result</code> list its input and output
         states; because JSON-LD arrays are unordered, the roles are also given
         as <a href="../terms#RoleBinding"><code>dlc:RoleBinding</code></a>
         entities with an explicit <code>position</code>
         (<code>dlc:inputs</code>, <code>dlc:outputs</code>). Parameters are
         <code>PropertyValue</code> entities (<code>dlc:parameters</code>) with a
-        lossless <code>dlc:jsonValue</code>.
+        lossless <code>dlc:jsonValue</code> (see <a href="#parameters">Parameters</a>).
+        An activity whose optional output had no result (e.g. a detection that
+        found nothing) has no <code>result</code>.
       </li>
       <li>
         Each state is a <code>CreativeWork</code> with its object identifier,
@@ -107,7 +111,8 @@
 
     <h2>State fingerprint <code>datalab-signal-v1</code></h2>
     <p>
-      The payload is the UTF-8 JCS form of
+      Used for a signal whose rows share one dtype (e.g. float64 signals). The
+      payload is the UTF-8 JCS form of
       <code>{"scheme": "datalab-signal-v1", "dtype": "&lt;f8", "length": N, "rows": ["x", "y"], "units": {"x": "s", "y": ""}}</code>
       (little-endian NumPy dtype string, missing units as <code>""</code>),
       one <code>0x00</code> byte, then each row (<code>x</code>,
@@ -117,6 +122,19 @@
       payload.
     </p>
 
+    <h2>State fingerprint <code>datalab-signal-v2</code></h2>
+    <p>
+      Used for a signal whose rows do not share one dtype, e.g. float32 or
+      complex values with a float64 X row. The payload is the UTF-8 JCS form
+      of
+      <code>{"scheme": "datalab-signal-v2", "length": N, "rows": [{"name": "x", "dtype": "&lt;f8"}, {"name": "y", "dtype": "&lt;f4"}], "units": {"x": "s", "y": ""}}</code>,
+      one <code>0x00</code> byte, then each row of the descriptor, in that
+      order, as contiguous little-endian bytes of its own dtype. The scheme is
+      chosen from the content alone, so that an object and its saved rows get
+      the same record; a signal fingerprinted with
+      <code>datalab-signal-v1</code> keeps that scheme.
+    </p>
+
     <h2>State fingerprint <code>datalab-image-v1</code></h2>
     <p>
       The payload is the UTF-8 JCS form of
@@ -124,7 +142,8 @@
       where <code>coords</code> is
       <code>{"uniform": {"x0": ..., "y0": ..., "dx": ..., "dy": ...}}</code>
       or <code>{"nonuniform": {"x": nx, "y": ny}}</code>, one
-      <code>0x00</code> byte, the data in C order as little-endian bytes, then,
+      <code>0x00</code> byte, the data in C order as little-endian bytes (any
+      numeric dtype, complex included), then,
       for non-uniform coordinates, the X and Y coordinates as little-endian
       float64. The value is <code>sha256:</code> followed by the lowercase
       hexadecimal digest of the payload.
@@ -151,6 +170,57 @@
       shown as <code>dlc:resultDigest</code>. When a later analysis stores a
       different value under the same key, the earlier artifact is reported as
       replaced, never as the later value.
+    </p>
+
+    <h2 id="parameters">Parameters</h2>
+    <p>
+      The parameters of a call are plain JSON values written by the parameter
+      codec of the computation library (Sigima codec version 2): a parameter set
+      is an object mapping item names to values (choices by their stable key);
+      values without a lossless JSON form use single-key typed objects:
+      <code>{"$float": "NaN" | "Infinity" | "-Infinity"}</code>,
+      <code>{"$complex": [re, im]}</code>, <code>{"$tuple": [...]}</code>,
+      <code>{"$dict": {...}}</code>, <code>{"$date": "YYYY-MM-DD"}</code>,
+      <code>{"$datetime": "..."}</code> (ISO 8601) and
+      <code>{"$ndarray": {"dtype": "&lt;f8", "shape": [...], "base64": "..."}}</code>
+      (raw little-endian C-order bytes). An operation taking several parameter
+      arguments gets one entry per argument name, whose value is a parameter
+      set, a list of parameter sets (e.g. several regions of interest) or
+      <code>null</code>. A reader decodes them against the parameter classes of
+      its own operation contract; no class, expression or pickle is ever read
+      from a document.
+    </p>
+
+    <h2>Execution context</h2>
+    <p>
+      The context of an activity records what its result depends on besides
+      inputs and parameters: the X-alignment policy applied to signals on
+      different grids (identifier, version and outcome) and the global options
+      read by the computation (e.g. <code>auto_normalize_kernel</code>). A replay
+      applies the recorded context, never the reader's current settings, and
+      refuses an unknown policy or a missing option.
+    </p>
+
+    <h2>Verification and comparison rules</h2>
+    <p>
+      An edition verifies a replayable activity by recomputing it, on copies of
+      its inputs, as a separate candidate (never inserted in the workspace, the
+      ledger unchanged), then compares every output of the operation with the
+      recorded one, by role: signals and images on their rows, regions of
+      interest and units; analysis results on their values and their
+      structure (kinds, column names, ROI indices); an output recorded without
+      result must have no result again. The comparison rule is the one declared
+      by the qualification of the operation: <code>exact</code> by default
+      (same rows, dtype and shape, equal values, NaN at the same positions, both
+      parts of complex values), or a tolerance (<code>atol</code>,
+      <code>rtol</code> per output, with its justification) for computations
+      whose last bits depend on the numerical libraries, which gives
+      <code>within_tolerance</code> with the observed errors and may require
+      identical results within an identical environment. A missing, altered or
+      replaced reference gives <code>not_verified</code>. The report lists each
+      output (<code>outputs</code>); its verdict is the most severe of theirs
+      (<code>exact</code>, <code>within_tolerance</code>,
+      <code>not_verified</code>, <code>different</code>).
     </p>
 
     <h2>Legacy activities</h2>
@@ -280,10 +350,13 @@
         for another payload.
       </li>
       <li>
-        Only replayable activities (qualified operation contract) may be
-        recomputed, as a separate candidate compared with the stored result;
-        opaque and legacy activities never are. Verifying a capsule checks its
-        integrity and computes nothing.
+        A call that names an operation contract keeps it, whether or not the
+        contract is qualified for replay: the activity is replayable, and a
+        reader recomputes it only when its own computation library qualifies
+        that contract version (otherwise it is refused, with the reason).
+        Opaque activities (no operation identity) and legacy activities are
+        never recomputed. Verifying a capsule checks its integrity and computes
+        nothing.
       </li>
     </ul>
     <p>
@@ -300,7 +373,7 @@
     <table>
       <tr><th>File</th><th>Document</th><th>SHA-256</th></tr>
       <tr><td><a href="schemas/ledger-1.schema.json"><code>schemas/ledger-1.schema.json</code></a></td><td>Workspace ledger (<code>urn:datalab:schema:provenance-ledger:1</code>)</td><td><code>c7b8dd125f83ba31f2f59defc479bf01c7f97a84eb8e914b5c97594229badcfb</code></td></tr>
-      <tr><td><a href="schemas/report-1.schema.json"><code>schemas/report-1.schema.json</code></a></td><td>Verification report (<code>urn:datalab:schema:verification-report:1</code>)</td><td><code>cc3dd342a632d907176893c5b63956c754fa45c782e4980e3c0828b31aff801f</code></td></tr>
+      <tr><td><a href="schemas/report-1.schema.json"><code>schemas/report-1.schema.json</code></a></td><td>Verification report (<code>urn:datalab:schema:verification-report:1</code>)</td><td><code>949dea73c5735f01ad46624f610967a1b20f63c5ca5ef6fc9221be2fd7feefc5</code></td></tr>
       <tr><td><a href="schemas/review-1.schema.json"><code>schemas/review-1.schema.json</code></a></td><td>Review (<code>urn:datalab:schema:capsule-review:1</code>)</td><td><code>5d75d6f736cb89f974477b774b8fd841911cec63e20b2dc22e52066447a9f163</code></td></tr>
       <tr><td><a href="contexts/ro-crate-1.3.jsonld"><code>contexts/ro-crate-1.3.jsonld</code></a></td><td>Pinned copy of <code>https://w3id.org/ro/crate/1.3/context</code> (CC0 1.0, by the RO-Crate authors), used for offline validation</td><td><code>5a3df1a43185501db4d45cdde5a478c57eeb1d673eedfe400488fc4c4b21dd91</code></td></tr>
     </table>
