@@ -195,10 +195,15 @@
     <p>
       The context of an activity records what its result depends on besides
       inputs and parameters: the X-alignment policy applied to signals on
-      different grids (identifier, version and outcome) and the global options
-      read by the computation (e.g. <code>auto_normalize_kernel</code>). A replay
-      applies the recorded context, never the reader's current settings, and
-      refuses an unknown policy or a missing option.
+      different grids (identifier, version and outcome), the global options
+      read by the computation (e.g. <code>auto_normalize_kernel</code>) and, since
+      state fingerprints do not cover metadata, the <code>sha256:</code> digest
+      of each input metadata value the computation reads (role, input position,
+      key; e.g. the fit parameters read by <code>evaluate_fit</code>). A replay
+      applies the recorded context, never the reader's current settings; it
+      refuses an unknown policy, a missing option or unrecorded metadata, and an
+      input whose metadata read changed since the activity
+      (<code>input_changed</code>).
     </p>
 
     <h2>Verification and comparison rules</h2>
